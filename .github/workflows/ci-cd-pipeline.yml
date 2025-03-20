@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps: 
-      - name: check out code
+      - name: Check out code
         uses: actions/checkout@v3
       
       - name: Set up Python
@@ -32,6 +32,16 @@ jobs:
         run: |
           echo "No tests available yet!"
 
-      - name: Deploy to GitHub Pages
+      - name: Deployment to AWS EC2
         if: github.event_name == 'push'
-        run: echo "Deployment step - Modify as needed!"
+        env:
+          AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
+          AWS_USERNAME: ${{ secrets.AWS_USERNAME }}
+        run: |
+          echo "Deploying to AWS EC2..."
+          ssh -o StrictHostKeyChecking=no -i Simple_web_app_Key.pem $AWS_USERNAME@$AWS_EC2_IP "
+          cd /home/ubuntu/flask-app || mkdir flask-app && cd flask-app
+          git pull origin main || git clone https://github.com/ashutosh-prajapati2011/Simple-WebApp.git .
+          pip install -r requirements.txt
+          nohup python3 app.py --host=0.0.0.0 &
+          echo 'App Deployed Successfully!'"
